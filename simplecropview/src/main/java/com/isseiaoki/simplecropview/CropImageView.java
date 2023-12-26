@@ -473,6 +473,14 @@ public class CropImageView extends ImageView {
                 float circleRadius = (mFrameRect.right - mFrameRect.left) / 2;
                 path.addCircle(circleCenter.x, circleCenter.y, circleRadius, Path.Direction.CCW);
                 canvas.drawPath(path, mPaintTranslucent);
+            } else if (mCropMode == CropMode.OVAL) {
+                float centerX = mFrameRect.centerX();
+                float centerY = mFrameRect.centerY();
+                float radiusX = mFrameRect.width() / 2;
+                float radiusY = mFrameRect.height() / 2 * 0.8f;
+                path.addOval(centerX - radiusX, centerY - radiusY, centerX + radiusX, centerY + radiusY, Path.Direction.CW);
+                path.setFillType(Path.FillType.INVERSE_EVEN_ODD);
+                canvas.drawPath(path, mPaintTranslucent);
             } else if (mCropMode == CropMode.STAR) {
                 float frameWidth = mFrameRect.width();
                 float frameHeight = mFrameRect.height();
@@ -1108,6 +1116,7 @@ public class CropImageView extends ImageView {
             case SQUARE:
             case CIRCLE:
             case CIRCLE_SQUARE:
+            case OVAL:
             case STAR:
                 return 1;
             case CUSTOM:
@@ -1134,6 +1143,7 @@ public class CropImageView extends ImageView {
             case SQUARE:
             case CIRCLE:
             case CIRCLE_SQUARE:
+            case OVAL:
             case STAR:
                 return 1;
             case CUSTOM:
@@ -1158,6 +1168,7 @@ public class CropImageView extends ImageView {
             case SQUARE:
             case CIRCLE:
             case CIRCLE_SQUARE:
+            case OVAL:
             case STAR:
                 return 1;
             case CUSTOM:
@@ -1182,6 +1193,7 @@ public class CropImageView extends ImageView {
             case SQUARE:
             case CIRCLE:
             case CIRCLE_SQUARE:
+            case OVAL:
             case STAR:
                 return 1;
             case CUSTOM:
@@ -1754,9 +1766,38 @@ public class CropImageView extends ImageView {
      * Crop the square image in a circular
      *
      * @param square image bitmap
+     * @return oval image bitmap
+     */
+    public Bitmap getOvalBitmap(Bitmap square) {
+        if (square == null) return null;
+        Bitmap output = Bitmap.createBitmap(square.getWidth(), square.getHeight(), Bitmap.Config.ARGB_8888);
+
+        final Rect rect = new Rect(0, 0, square.getWidth(), square.getHeight());
+        Canvas canvas = new Canvas(output);
+
+        final Paint paint = new Paint();
+        paint.setAntiAlias(true);
+        paint.setFilterBitmap(true);
+
+        Path path = new Path();
+
+        float centerX = square.getWidth() / 2;
+        float centerY = square.getHeight() / 2;
+        float radiusX = square.getWidth() / 2;
+        float radiusY = square.getHeight() / 2 * 0.8f;
+        path.addOval(centerX - radiusX, centerY - radiusY, centerX + radiusX, centerY + radiusY, Path.Direction.CW);
+        canvas.clipPath(path);
+        canvas.drawBitmap(square, null, rect, paint);
+        return output;
+    }
+
+    /**
+     * Crop the square image in a circular
+     *
+     * @param square image bitmap
      * @return star image bitmap
      */
-    public Bitmap getCircularStarBitmap(Bitmap square) {
+    public Bitmap getStarBitmap(Bitmap square) {
         if (square == null) return null;
         Bitmap output = Bitmap.createBitmap(square.getWidth(), square.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(output);
@@ -2019,8 +2060,14 @@ public class CropImageView extends ImageView {
                     cropped.recycle();
                 }
                 cropped = circle;
+            } else if (mCropMode == CropMode.OVAL) {
+                Bitmap ovalBitmap = getOvalBitmap(cropped);
+                if (cropped != getBitmap()) {
+                    cropped.recycle();
+                }
+                cropped = ovalBitmap;
             } else if (mCropMode == CropMode.STAR) {
-                Bitmap starBitmap = getCircularStarBitmap(cropped);
+                Bitmap starBitmap = getStarBitmap(cropped);
                 if (cropped != getBitmap()) {
                     cropped.recycle();
                 }
