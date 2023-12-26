@@ -159,6 +159,28 @@
           style="@style/AppTheme.Button.Borderless"
           />
 
+      <Button
+          android:id="@+id/buttonShowStarButCropAsSquare"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center_vertical"
+          android:layout_margin="@dimen/spacing_xsmall"
+          android:padding="@dimen/spacing_xsmall"
+          android:text="STAR"
+          style="@style/AppTheme.Button.Borderless"
+          />
+
+      <Button
+          android:id="@+id/buttonShowOvalButCropAsSquare"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center_vertical"
+          android:layout_margin="@dimen/spacing_xsmall"
+          android:padding="@dimen/spacing_xsmall"
+          android:text="Oval"
+          style="@style/AppTheme.Button.Borderless"
+          />
+
     </LinearLayout>
   </HorizontalScrollView>
 
