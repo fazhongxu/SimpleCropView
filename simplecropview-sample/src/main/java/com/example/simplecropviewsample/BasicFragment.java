@@ -164,6 +164,8 @@ public class BasicFragment extends Fragment {
         view.findViewById(R.id.buttonShowCircleButCropAsSquare).setOnClickListener(btnListener);
         view.findViewById(R.id.buttonShowStarButCropAsSquare).setOnClickListener(btnListener);
         view.findViewById(R.id.buttonShowOvalButCropAsSquare).setOnClickListener(btnListener);
+        view.findViewById(R.id.buttonShowHeartButCropAsSquare).setOnClickListener(btnListener);
+        view.findViewById(R.id.buttonShowWaterButCropAsSquare).setOnClickListener(btnListener);
     }
 
     @NeedsPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -344,6 +346,12 @@ public class BasicFragment extends Fragment {
                     break;
                 case R.id.buttonShowOvalButCropAsSquare:
                     mCropView.setCropMode(CropImageView.CropMode.OVAL);
+                    break;
+                case R.id.buttonShowHeartButCropAsSquare:
+                    mCropView.setCropMode(CropImageView.CropMode.HEART);
+                    break;
+                case R.id.buttonShowWaterButCropAsSquare:
+                    mCropView.setCropMode(CropImageView.CropMode.WATER);
                     break;
                 case R.id.buttonRotateLeft:
                     mCropView.rotateImage(CropImageView.RotateDegrees.ROTATE_M90D);

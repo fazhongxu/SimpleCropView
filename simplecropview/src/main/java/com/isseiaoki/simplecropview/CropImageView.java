@@ -501,6 +501,10 @@ public class CropImageView extends ImageView {
                 path.offset(offsetX, offsetY); // 平移路径，使其居中
                 // 绘制五角星
                 canvas.drawPath(path, mPaintTranslucent);
+            } else if (mCropMode == CropMode.HEART) {
+                path = getHeartPath(mFrameRect);
+                path.setFillType(Path.FillType.INVERSE_EVEN_ODD);
+                canvas.drawPath(path, mPaintTranslucent);
             }
         } else {
             path.addRect(overlayRect, Path.Direction.CW);
@@ -1103,6 +1107,7 @@ public class CropImageView extends ImageView {
             case CIRCLE_SQUARE:
             case OVAL:
             case STAR:
+            case HEART:
                 return 1;
             case CUSTOM:
                 return mCustomRatio.x;
@@ -1130,6 +1135,7 @@ public class CropImageView extends ImageView {
             case CIRCLE_SQUARE:
             case OVAL:
             case STAR:
+            case HEART:
                 return 1;
             case CUSTOM:
                 return mCustomRatio.y;
@@ -1155,6 +1161,7 @@ public class CropImageView extends ImageView {
             case CIRCLE_SQUARE:
             case OVAL:
             case STAR:
+            case HEART:
                 return 1;
             case CUSTOM:
                 return mCustomRatio.x;
@@ -1180,6 +1187,7 @@ public class CropImageView extends ImageView {
             case CIRCLE_SQUARE:
             case OVAL:
             case STAR:
+            case HEART:
                 return 1;
             case CUSTOM:
                 return mCustomRatio.y;
@@ -1797,7 +1805,7 @@ public class CropImageView extends ImageView {
         paint.setFilterBitmap(true);
 
         // 创建五角星的路径
-        Path path = getStartPath(square.getWidth(),square.getHeight());
+        Path path = getStartPath(square.getWidth(), square.getHeight());
 
         // 计算偏移量，使五角星居中
         RectF starBounds = new RectF();
@@ -1841,6 +1849,66 @@ public class CropImageView extends ImageView {
             path.lineTo(x, y);
         }
         path.close();
+        return path;
+    }
+
+    /**
+     * Crop the square image in a heart
+     *
+     * @param square image bitmap
+     * @return heart image bitmap
+     */
+    public Bitmap getHeartBitmap(Bitmap square) {
+        if (square == null) return null;
+
+        int width = square.getWidth();
+        int height = square.getHeight();
+
+        Bitmap output = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(output);
+
+        final Rect rect = new Rect(0, 0, width, height);
+
+        final Paint paint = new Paint();
+        paint.setAntiAlias(true);
+        paint.setFilterBitmap(true);
+
+        // 获取心形路径
+        Path path = getHeartPath(new RectF(rect));
+
+        // 使用路径裁剪位图
+        canvas.clipPath(path);
+        canvas.drawBitmap(square, rect, rect, paint);
+
+        return output;
+    }
+
+    /**
+     * 获取心形路径，路径居中于给定的矩形区域中
+     *
+     * @param rect 给定的矩形区域
+     * @return 返回心形路径
+     */
+    private Path getHeartPath(RectF rect) {
+        Path path = new Path();
+
+        float centerX = rect.centerX();
+        float centerY = rect.centerY() - rect.height() / 10;
+        float radius = rect.width() / 2;
+
+        // 左半边心形
+        path.moveTo(centerX, centerY + radius);
+        path.cubicTo(centerX - radius, centerY + radius * 0.75f,
+                centerX - radius * 1.5f, centerY - radius,
+                centerX, centerY - radius * 0.5f);
+        // 右半边心形
+        path.moveTo(centerX, centerY + radius);
+        path.cubicTo(centerX + radius, centerY + radius * 0.75f,
+                centerX + radius * 1.5f, centerY - radius,
+                centerX, centerY - radius * 0.5f);
+
+        path.close();
+
         return path;
     }
 
@@ -2074,6 +2142,12 @@ public class CropImageView extends ImageView {
                     cropped.recycle();
                 }
                 cropped = starBitmap;
+            } else if (mCropMode == CropMode.HEART) {
+                Bitmap heartBitmap = getHeartBitmap(cropped);
+                if (cropped != getBitmap()) {
+                    cropped.recycle();
+                }
+                cropped = heartBitmap;
             }
         }
 
@@ -2521,7 +2595,7 @@ public class CropImageView extends ImageView {
 
     public enum CropMode {
         FIT_IMAGE(0), RATIO_4_3(1), RATIO_3_4(2), SQUARE(3), RATIO_16_9(4), RATIO_9_16(5), FREE(
-                6), CUSTOM(7), CIRCLE(8), CIRCLE_SQUARE(9), OVAL(10), STAR(11);
+                6), CUSTOM(7), CIRCLE(8), CIRCLE_SQUARE(9), OVAL(10), STAR(11), HEART(12), WATER(13);
         private final int ID;
 
         CropMode(final int id) {
