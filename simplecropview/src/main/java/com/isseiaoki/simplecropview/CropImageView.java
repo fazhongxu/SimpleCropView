@@ -490,22 +490,7 @@ public class CropImageView extends ImageView {
                 float outerRadius = frameSize / 2;
                 float innerRadius = outerRadius * 0.382f; // 五角星内部小圆半径
 
-                double startAngle = -Math.PI / 2;  // 起始角度设置为-90度
-
-                for (int i = 0; i < 5; i++) {
-                    double outerX = centerX + outerRadius * Math.cos(startAngle + i * 2 * Math.PI / 5);
-                    double outerY = centerY + outerRadius * Math.sin(startAngle + i * 2 * Math.PI / 5);
-                    if (i == 0) {
-                        path.moveTo((float) outerX, (float) outerY);
-                    } else {
-                        path.lineTo((float) outerX, (float) outerY);
-                    }
-                    double innerX = centerX + innerRadius * Math.cos(startAngle + Math.PI / 5 + i * 2 * Math.PI / 5);
-                    double innerY = centerY + innerRadius * Math.sin(startAngle + Math.PI / 5 + i * 2 * Math.PI / 5);
-                    path.lineTo((float) innerX, (float) innerY);
-                }
-
-                path.close();
+                path = getStartPath(frameWidth, frameHeight);
                 path.setFillType(Path.FillType.INVERSE_EVEN_ODD); // 设置填充类型为反奇偶规则
 
                 // 计算偏移量，使五角星居中
@@ -1812,7 +1797,36 @@ public class CropImageView extends ImageView {
         paint.setFilterBitmap(true);
 
         // 创建五角星的路径
+        Path path = getStartPath(square.getWidth(),square.getHeight());
+
+        // 计算偏移量，使五角星居中
+        RectF starBounds = new RectF();
+        path.computeBounds(starBounds, true);
+        float offsetX = halfWidth - (starBounds.left + starBounds.right) / 2; // 计算水平方向上的偏移量
+        float offsetY = halfHeight - (starBounds.top + starBounds.bottom) / 2; // 计算垂直方向上的偏移量
+        path.offset(offsetX, offsetY); // 平移路径，使其居中
+
+        // 使用路径裁剪位图
+        canvas.clipPath(path);
+        canvas.drawBitmap(square, rect, rect, paint);
+
+        return output;
+    }
+
+    /**
+     * 获取五角星路径
+     *
+     * @param width
+     * @param height
+     * @return
+     */
+    private Path getStartPath(float width,
+                              float height) {
         Path path = new Path();
+
+        float halfWidth = width / 2;
+        float halfHeight = width / 2;
+
         float mid = Math.min(halfWidth, halfHeight);
         float bigRadius = mid;
         float smallRadius = mid / 2.5f;
@@ -1827,19 +1841,7 @@ public class CropImageView extends ImageView {
             path.lineTo(x, y);
         }
         path.close();
-
-        // 计算偏移量，使五角星居中
-        RectF starBounds = new RectF();
-        path.computeBounds(starBounds, true);
-        float offsetX = halfWidth - (starBounds.left + starBounds.right) / 2; // 计算水平方向上的偏移量
-        float offsetY = halfHeight - (starBounds.top + starBounds.bottom) / 2; // 计算垂直方向上的偏移量
-        path.offset(offsetX, offsetY); // 平移路径，使其居中
-
-        // 使用路径裁剪位图
-        canvas.clipPath(path);
-        canvas.drawBitmap(square, rect, rect, paint);
-
-        return output;
+        return path;
     }
 
     /**
