@@ -505,6 +505,10 @@ public class CropImageView extends ImageView {
                 path = getHeartPath(mFrameRect);
                 path.setFillType(Path.FillType.INVERSE_EVEN_ODD);
                 canvas.drawPath(path, mPaintTranslucent);
+            } else if (mCropMode == CropMode.WATER) {
+                path = getWaterPath(mFrameRect);
+                path.setFillType(Path.FillType.INVERSE_EVEN_ODD);
+                canvas.drawPath(path, mPaintTranslucent);
             }
         } else {
             path.addRect(overlayRect, Path.Direction.CW);
@@ -1108,6 +1112,7 @@ public class CropImageView extends ImageView {
             case OVAL:
             case STAR:
             case HEART:
+            case WATER:
                 return 1;
             case CUSTOM:
                 return mCustomRatio.x;
@@ -1136,6 +1141,7 @@ public class CropImageView extends ImageView {
             case OVAL:
             case STAR:
             case HEART:
+            case WATER:
                 return 1;
             case CUSTOM:
                 return mCustomRatio.y;
@@ -1162,6 +1168,7 @@ public class CropImageView extends ImageView {
             case OVAL:
             case STAR:
             case HEART:
+            case WATER:
                 return 1;
             case CUSTOM:
                 return mCustomRatio.x;
@@ -1188,6 +1195,7 @@ public class CropImageView extends ImageView {
             case OVAL:
             case STAR:
             case HEART:
+            case WATER:
                 return 1;
             case CUSTOM:
                 return mCustomRatio.y;
@@ -1893,21 +1901,72 @@ public class CropImageView extends ImageView {
         Path path = new Path();
 
         float centerX = rect.centerX();
-        float centerY = rect.centerY() - rect.height() / 10;
+        float centerY = rect.centerY();
         float radius = rect.width() / 2;
 
         // 左半边心形
-        path.moveTo(centerX, centerY + radius);
-        path.cubicTo(centerX - radius, centerY + radius * 0.75f,
-                centerX - radius * 1.5f, centerY - radius,
-                centerX, centerY - radius * 0.5f);
-        // 右半边心形
-        path.moveTo(centerX, centerY + radius);
-        path.cubicTo(centerX + radius, centerY + radius * 0.75f,
-                centerX + radius * 1.5f, centerY - radius,
-                centerX, centerY - radius * 0.5f);
+        path.moveTo(centerX, centerY - radius * 0.75F);
+        path.cubicTo(centerX - radius * 0.75F, centerY - radius * 1.2F, centerX - radius * 1.5F, centerY, centerX, centerY+radius*0.85F);
 
-        path.close();
+        // 右半边心形
+        path.moveTo(centerX, centerY - radius * 0.75F);
+        path.cubicTo(centerX + radius * 0.75F, centerY - radius * 1.2F, centerX + radius * 1.5F, centerY, centerX, centerY + radius * 0.85F);
+
+        return path;
+    }
+
+    /**
+     * Crop the square image in a water
+     *
+     * @param square image bitmap
+     * @return heart image bitmap
+     */
+    public Bitmap getWaterBitmap(Bitmap square) {
+        if (square == null) return null;
+
+        int width = square.getWidth();
+        int height = square.getHeight();
+
+        Bitmap output = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(output);
+
+        final Rect rect = new Rect(0, 0, width, height);
+
+        final Paint paint = new Paint();
+        paint.setAntiAlias(true);
+        paint.setFilterBitmap(true);
+
+        // 获取水滴形路径
+        Path path = getWaterPath(new RectF(rect));
+
+        // 使用路径裁剪位图
+        canvas.clipPath(path);
+        canvas.drawBitmap(square, rect, rect, paint);
+
+        return output;
+    }
+
+    /**
+     * 获取水滴路径，路径居中于给定的矩形区域中
+     *
+     * @param rect 给定的矩形区域
+     * @return 返回水滴形路径
+     */
+    private Path getWaterPath(RectF rect) {
+        Path path = new Path();
+
+        float width = rect.width();
+        float height = rect.height();
+        float centerX = rect.centerX();
+        float centerY = rect.centerY();
+        float radius = rect.width() / 2;
+
+        path.moveTo(centerX, centerY + radius - 10);
+
+        path.cubicTo(centerX - radius, centerY + radius, centerX - radius * 1.5F, centerY, centerX, centerY - radius + 10);
+
+        path.moveTo(centerX, centerY + radius - 10);
+        path.cubicTo(centerX + radius, centerY + radius, centerX + radius * 1.5F, centerY, centerX, centerY - radius + 10);
 
         return path;
     }
@@ -2144,6 +2203,12 @@ public class CropImageView extends ImageView {
                 cropped = starBitmap;
             } else if (mCropMode == CropMode.HEART) {
                 Bitmap heartBitmap = getHeartBitmap(cropped);
+                if (cropped != getBitmap()) {
+                    cropped.recycle();
+                }
+                cropped = heartBitmap;
+            }else if (mCropMode == CropMode.WATER) {
+                Bitmap heartBitmap = getWaterBitmap(cropped);
                 if (cropped != getBitmap()) {
                     cropped.recycle();
                 }
